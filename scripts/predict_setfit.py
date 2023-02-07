@@ -4,11 +4,10 @@
 
 # Imports
 import re
-from flair.models import TextClassifier
-from flair.data import Sentence
 import emoji
+from setfit import SetFitModel
 
-MODEL_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/flair-sentiment-classifier/best-model.pt'
+MODEL_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/setfit-classifier'
 
 def clean_text(text):
     text = re.sub(r'[\.]+', '.', text)
@@ -54,14 +53,11 @@ def clean_text(text):
 
 class SentimentClassifier:
     def __init__(self):
-        self.model = TextClassifier.load(MODEL_PATH)
+        self.model = SetFitModel.from_pretrained(MODEL_PATH)
+
     def predict(self, text):
         text = clean_text(text)
-        sentence = Sentence(text)
-        self.model.predict(sentence)
-        if sentence.to_dict()['all labels'][0]['value'] == '1':
-            return 'positive'
-        return 'negative'
+        return 'positive' if self.model([text]).item()==1 else 'negative'
 
 if __name__ == '__main__':
     text = input('Input tweet')
