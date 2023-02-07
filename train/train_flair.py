@@ -4,7 +4,6 @@
 
 # Imports
 import os
-import pathlib
 import pandas as pd
 
 from sklearn.model_selection import train_test_split

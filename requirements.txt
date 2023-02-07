@@ -1,0 +1,9 @@
+scikit-learn==1.0.2
+setfit==0.5.0
+flair
+spacy
+spacy-transformers
+pandas
+nltk
+dask
+emoji
