@@ -9,8 +9,8 @@ import pickle
 import re
 import string
 import pandas as pd
-import nltk
 
+import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
@@ -27,6 +27,8 @@ nltk.download('omw-1.4')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
+# use stopwords without the negative ones. Convert the stopwords into a set to aid faster
+# token-lookup with O(1) in stopwords since the dataset is large
 stops = stopwords.words('english')
 negatives = ['no','nor','not','ain','aren',"aren't",'couldn',"couldn't",'didn',"didn't",'doesn',"doesn't",'hadn',"hadn't",'hasn',
   "hasn't",'haven',"haven't",'isn',"isn't",'mightn',"mightn't",'mustn',"mustn't",'needn',"needn't",'shan',"shan't",'shouldn',"shouldn't",
@@ -39,6 +41,13 @@ TRAIN = os.path.join('/home/sakshi/projects/twt-sentiment-analysis/data/processe
 TEST = os.path.join('/home/sakshi/projects/twt-sentiment-analysis/data/processed_data', 'test.csv')
 
 def clean_text(text):
+    """
+        Basic text cleaning function
+        Args:
+            @param text (str) : Text
+        Returns:
+            @return cleaned_text (str) : Cleaned text
+    """
     text = re.sub(r'[\.]+', '.', text)
     # print(text)
     text = re.sub(r'[\!]+', '!', text)
@@ -80,22 +89,46 @@ def clean_text(text):
     text = emoji.demojize(text)
     return text
 
-
 def remove_punctuation(text):
+    """
+        Function to remove punctuation from text
+        Args:
+            @param text (str) : Text
+        Returns:
+            @return claned_text (str) : Punctuation-free text
+    """
     translator = str.maketrans(string.punctuation, ' '*len(string.punctuation))
     text = text.translate(translator)
     return re.sub(r'\s+', ' ', text).strip()
 
 def remove_numbers(text):
+    """
+        Function to remove any numbers from text
+        Args:
+            @param text (str) : Text
+        Returns:
+            @return cleaned_text (str) : Numbers-removed text
+    """
     return re.sub(r'[0-9]+', '', text)
 
 def remove_stopwords_and_lemmatize(text):
+    """
+        Args:
+            @param text (str) : Text
+        Returns:
+            @return cleaned_text (str) : Lemmatized text with stopwords removed
+    """
     tokens = word_tokenize(text)
     tokens = [token.strip() for token in tokens if token.strip() not in stops]
     tokens = [lemmatizer.lemmatize(token) for token in tokens]
     return ' '.join(tokens)
 
 def load_data_and_prepare_for_training(save_path):
+    """
+        Function to prepare cleaned data for training by taking subset of dataset due to compute limitations
+        Args:
+            @param save_path (str or Path) : Directory path to save vectorizer
+    """
     df_train = pd.read_csv(TRAIN)
     df_test = pd.read_csv(TEST)
     df_test = df_test.loc[df_test['sentiment'] != 2]
@@ -147,14 +180,37 @@ def load_data_and_prepare_for_training(save_path):
     return X_train, y_train, X_test, y_test
 
 def train(model, X_train, y_train):
+    """
+        Train model
+        Args:
+            @param model (sklearn model) : Object of sklearn models to train
+            @param X_train (array(int)) : np.array vectors of features data
+            @param y_train (array(int)) : np.array vectors of target variable
+        Returns:
+            @return model (sklearn model) : Trained sklearn model
+    """
     return model.fit(X_train, y_train)
 
 def save_model(model, dirpath, model_name):
+    """
+        Function to save model/vectorizer
+        Args:
+            @param model (any sklearn model) : sklearn model to be saved
+            @param dirpath (str or Path) : Directory path to save model in
+            @param model_name (str) : Name of model
+    """
     with open(os.path.join(dirpath, model_name + '.sav'), 'wb') as f:
         pickle.dump(model, f)
     f.close()
 
 def make_predictions(model, X_test, y_test, dirpath, model_name):
+    """
+        Function to evaluate on test data. Saves confusion matrix and classification report
+        Args:
+            @param model (sklearn model) : Model to evaluate
+            @param X_test (np.array(int)) : np.array vectors of features data
+            @param y_test (np.array(int)) : np.array vectors of target variable
+    """
     predictions = model.predict(X_test)
 
     cm = confusion_matrix(y_test, predictions)
@@ -233,4 +289,3 @@ if __name__ == '__main__':
     model = train(model, X_train, y_train)
     save_model(model, dirpath, 'adaboost_clf')
     make_predictions(model, X_test, y_test, dirpath, 'adaboost_clf')
-

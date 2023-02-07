@@ -11,6 +11,16 @@ from sentence_transformers.losses import CosineSimilarityLoss
 from setfit import SetFitModel, SetFitTrainer
 
 def prepare_dataset(per_class_sample_size, train_data_path, test_data_path):
+    """
+        Function to prepare dataset for training
+        Args:
+            @param per_class_sample_size (int) : No. of samples to take in training data for each class
+            @param train_data_path (str or Path) : Path to training data csv (train.csv)
+            @param test_data_path (str or Path) : Path to testing data csv (test.csv)
+        Return:
+            @return train_dataset (datasets.Dataset) : Train Dataset
+            @return test_dataset (datasets.Dataset) : Test Dataset
+    """
     df_train = pd.read_csv(train_data_path)
     df_test = pd.read_csv(test_data_path)
 
@@ -38,30 +48,61 @@ def prepare_dataset(per_class_sample_size, train_data_path, test_data_path):
     return train_dataset, test_dataset
 
 class ClassificationTrainer:
+    """
+        Text-classification trainer class
+    """
     def __init__(self, model_name_or_path):
+        """
+            Args:
+                @param model_name_or_path (str or Path) : Name of or path to the base sentence transformer model to be used
+        """
         self.model = SetFitModel.from_pretrained(model_name_or_path)
 
     def train(self, train_ds, test_ds, batch_size, num_iterations, num_train_epochs):
+        """
+            Function to fine-tune the sentence transformers
+            Args:
+                @param train_ds (datasets.Dataset) : Train dataset
+                @param test_ds (datasets.Dataset) : Test dataset
+                @param batch_size (int) : Per-device train & test batch size
+                @param num_iterations (int) : No. of text pairs to generate for contrastive learning
+                @param num_train_epochs (int) : No. of train epochs
+        """
         self.trainer = SetFitTrainer(
             model = self.model,
             train_dataset = train_ds,
             eval_dataset = test_ds,
             loss_class = CosineSimilarityLoss,
             batch_size = batch_size,
-            num_iterations = num_iterations, # Number of text pairs to generate for contrastive learning
+            num_iterations = num_iterations,
             num_epochs = num_train_epochs
         )
 
         self.trainer.train()
 
     def evaluate(self):
+        """
+            Function to evaluate model on test data
+        """
         return self.trainer.evaluate()
 
     def save_model(self, save_model_dirpath):
+        """
+            Function to save fine-tuned model
+            Args:
+                @param save_model_dirpath (str or Path) : Path to directory to save model in
+        """
         self.model.save_pretrained(save_model_dirpath)
         print(f'Model saved at {save_model_dirpath}')
 
     def predict(self, text):
+        """
+            Function to test fine-tuned model
+            Args:
+                @param text (str) : Text
+            Returns:
+                @param label (str) : 'positive' or 'negative' label
+        """
         return 'positive' if self.model([text]).item()==1 else 'negative'
 
 
