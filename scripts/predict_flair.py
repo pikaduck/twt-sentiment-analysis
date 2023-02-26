@@ -4,6 +4,7 @@
 
 # Imports
 import re
+from time import time
 from flair.models import TextClassifier
 from flair.data import Sentence
 import emoji
@@ -54,17 +55,24 @@ def clean_text(text):
 
 class SentimentClassifier:
     def __init__(self):
+        print('Loading Flair sentiment classifier ...')
+        start = time()
         self.model = TextClassifier.load(MODEL_PATH)
+        print(f'Time taken to load flair sentiment classifier = {time() - start}')
+
     def predict(self, text):
         text = clean_text(text)
+        print(f'cleaned text : {text}')
         sentence = Sentence(text)
+        start = time()
         self.model.predict(sentence)
+        print(f'Inference time = {time() - start}')
         if sentence.to_dict()['all labels'][0]['value'] == '1':
             return 'positive'
         return 'negative'
 
 if __name__ == '__main__':
-    text = input('Input tweet')
+    text = input('Input tweet : ')
     text = clean_text(text)
     classifier = SentimentClassifier()
     prediction = classifier.predict(text)

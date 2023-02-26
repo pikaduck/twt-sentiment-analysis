@@ -4,6 +4,7 @@
 
 # Imports
 import re
+from time import time
 import emoji
 from setfit import SetFitModel
 
@@ -53,14 +54,21 @@ def clean_text(text):
 
 class SentimentClassifier:
     def __init__(self):
+        print('Loading SetFit sentiment classifier ...')
+        start = time()
         self.model = SetFitModel.from_pretrained(MODEL_PATH)
+        print(f'Time taken to load SetFit sentiment classifier = {time() - start}')
 
     def predict(self, text):
         text = clean_text(text)
-        return 'positive' if self.model([text]).item()==1 else 'negative'
+        print(f'cleaned text : {text}')
+        start = time()
+        output = self.model([text])
+        print(f'Inference time = {time() - start}')
+        return 'positive' if output.item()==1 else 'negative'
 
 if __name__ == '__main__':
-    text = input('Input tweet')
+    text = input('Input tweet : ')
     text = clean_text(text)
     classifier = SentimentClassifier()
     prediction = classifier.predict(text)

@@ -4,6 +4,7 @@
 
 # Imports
 import re
+from time import time
 import emoji
 import spacy
 import spacy_transformers
@@ -54,15 +55,21 @@ def clean_text(text):
 
 class SentimentClassifier:
     def __init__(self):
+        print('Loading SpaCy sentiment classifier ...')
+        start = time()
         self.nlp = spacy.load(MODEL_PATH)
+        print(f'Time taken to load SpaCy classifier = {time() - start}')
 
     def predict(self, text):
         text = clean_text(text)
+        print(f'cleaned text : {text}')
+        start = time()
         cats = self.nlp(text)
-        return 'positive' if cats['positive'] > cats['negative'] else 'negative'
+        print(f'Inference time = {time() - start}')
+        return 'positive' if cats.cats['positive'] > cats.cats['negative'] else 'negative'
 
 if __name__ == '__main__':
-    text = input('Input tweet')
+    text = input('Input tweet : ')
     text = clean_text(text)
     classifier = SentimentClassifier()
     prediction = classifier.predict(text)

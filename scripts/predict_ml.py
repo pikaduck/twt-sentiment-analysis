@@ -6,6 +6,7 @@
 import re
 import string
 import pickle
+from time import time
 
 import nltk
 from nltk.tokenize import word_tokenize
@@ -14,10 +15,10 @@ from nltk.corpus import stopwords
 
 import emoji
 
-nltk.download('punkt')
-nltk.download('omw-1.4')
-nltk.download('stopwords')
-nltk.download('wordnet')
+# nltk.download('punkt')
+# nltk.download('omw-1.4')
+# nltk.download('stopwords')
+# nltk.download('wordnet')
 
 stops = stopwords.words('english')
 negatives = ['no','nor','not','ain','aren',"aren't",'couldn',"couldn't",'didn',"didn't",'doesn',"doesn't",'hadn',"hadn't",'hasn',
@@ -27,9 +28,9 @@ stops = set([stop for stop in stops if stop not in negatives])
 
 lemmatizer = WordNetLemmatizer()
 MODEL, COUNT_VECTORIZER, TFIDF = None, None, None
-MODEL_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/model.sav'
+MODEL_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/xgb_clf.sav'
 COUNT_VECTORIZER_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/count_vectorizer.sav'
-TFIDF_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/tfidf.sav'
+TFIDF_PATH = '/home/sakshi/projects/twt-sentiment-analysis/models/tfidf_vectorizer.sav'
 
 def clean_text(text):
     text = re.sub(r'[\.]+', '.', text)
@@ -92,17 +93,26 @@ def load_model():
 
     if MODEL is None:
         with open(MODEL_PATH, 'rb') as f:
-            MODEL = pickle.load(MODEL_PATH)
+            print('Loading classifier ...')
+            start = time()
+            MODEL = pickle.load(f)
+            print(f'Time taken to load model = {time() - start}')
         f.close()
 
     if COUNT_VECTORIZER is None:
         with open(COUNT_VECTORIZER_PATH, 'rb') as f:
+            print('Loading count vectorizer ...')
+            start = time()
             COUNT_VECTORIZER = pickle.load(f)
+            print(f'Time taken to load count vectorizer = {time() - start}')
         f.close()
 
-    if TFIDF_PATH is None:
+    if TFIDF is None:
         with open(TFIDF_PATH, 'rb') as f:
-            TFIDF = pickle.load(TFIDF_PATH)
+            print('Loading tfidf vectorizer ...')
+            start = time()
+            TFIDF = pickle.load(f)
+            print(f'Time taken to load tfidf vectorizer = {time() - start}')
         f.close()
 
 def predict(text):
@@ -116,10 +126,13 @@ def predict(text):
 
     vector = COUNT_VECTORIZER.transform([text]).toarray()
     vector = TFIDF.transform(vector).toarray()
+    start = time()
     prediction = MODEL.predict(vector).item()
+    print(f'Inference time = {time() - start}')
     return 'positive' if prediction == 1 else 'negative'
 
 if __name__ == '__main__':
     text = input('Enter tweet')
+    # text = "i am so bored!!!"
     prediction = predict(text)
     print(text, ' : ', prediction)
