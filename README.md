@@ -1,12 +1,6 @@
 # Twitter Data Sentiment Analysis
 
-Demo App available at 
-<iframe
-	src="https://pikaduck-setfit-twitter-data-sentiment-an-72b6ae7.hf.space"
-	frameborder="0"
-	width="850"
-	height="450"
-></iframe>
+HF Space - https://pikaduck-setfit-twitter-data-sentiment-an-72b6ae7.hf.space
 
 
 ## Text-preprocessing approach undertaken for ML models
